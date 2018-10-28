@@ -1,9 +1,3 @@
-import os
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
-from cryptography.fernet import Fernet
-import random
-
 '''
 W wybranym języku programowania (C/C++/C#, java, python, javascript,:) wykonać:
 • Cztery działania na małych liczbach z wykorzystaniem procedur działania
@@ -20,35 +14,87 @@ o Plik uszkodzony/zmieniony
 
 '''
 
-# zadanie 1
+import os
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
 
-# zadanie 2
+# opening for [r]eading as [b]inary
+file = open("file.txt", "rb")
 
-# zadanie 3
-#
-# backend = default_backend()
-# key = os.urandom(32)
-# wrong_key = os.urandom(32)
-# iv = os.urandom(16)
-# cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
-# encryptor = cipher.encryptor()
-# ct = encryptor.update(b"a secret messagde") + encryptor.finalize()
-# decryptor = cipher.decryptor()
-# print(decryptor.update(ct) + decryptor.finalize())
+correct_data = file.read()
+
+file.close()
 
 
-key = Fernet.generate_key()
-wrong_key = Fernet.generate_key()
+def zadanie_3(correct_data):
+    print("Zadanie 3:\n")
+    print("Klucze i pliki poprawne:\n")
 
-message = "no witam".encode()
+    message = correct_data
 
-f = Fernet(key)
-encrypted_message = f.encrypt(message)
+    padded_data = pad(message)
 
-f2 = Fernet(wrong_key)
+    good_key = os.urandom(32)
+    wrong_key = os.urandom(32)
 
-good_encrypted = f.decrypt(encrypted_message)
-bad_encrypted = f2.decrypt(encrypted_message)
+    print(f"Encrypting message {message}. After padding => {padded_data}")
 
-print(good_encrypted)
-print(bad_encrypted)
+    encrypted_data = encrypt(padded_data, good_key)
+    print(f"Encrypted data: {encrypted_data}")
+
+    decrypted_data = decrypt(encrypted_data, good_key)
+    decrypted_message = unpad(decrypted_data)
+    print(f"Message decrypted: {decrypted_data} => {decrypted_message}")
+
+    bad_decrypted_data = decrypt(encrypted_data, wrong_key)
+    print(f"Message decrypted with wrong key: {bad_decrypted_data}")
+
+    print("\nBłąd w pliku zaszyfrowanym (pierwszy bajt zamieniony na 0): ")
+
+    corrupted_data = corrupt(encrypted_data)
+    decrypted_corrupted_data = decrypt(corrupted_data, good_key)
+
+    print(f"Decrypted corrupted data: {decrypted_corrupted_data}")
+
+
+def pad(data):
+    padder = padding.PKCS7(128).padder()
+    padded_data = padder.update(data)
+    padded_data += padder.finalize()
+    return padded_data
+
+
+def unpad(data):
+    unpadder = padding.PKCS7(128).unpadder()
+    unpadded_data = unpadder.update(data)
+
+    return unpadded_data + unpadder.finalize()
+
+
+def corrupt(msg_bytes):  # zamienia pierwszy bajt na 0
+    array = bytearray(msg_bytes)
+    array[0] = 0
+    return bytes(array)
+
+
+def encrypt(data, key):
+    backend = default_backend()
+    iv = b'\xd0\xbc\xbe\x80\x91\x19H\xf2[\x1b\xd3 \xb5\x85\xc7h'
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+    encryptor = cipher.encryptor()
+    ciphered_data = encryptor.update(data) + encryptor.finalize()
+    return ciphered_data
+
+
+def decrypt(data, key):
+    backend = default_backend()
+    iv = b'\xd0\xbc\xbe\x80\x91\x19H\xf2[\x1b\xd3 \xb5\x85\xc7h'
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+    decryptor = cipher.decryptor()
+
+    decrypted_data = decryptor.update(data) + decryptor.finalize()
+    return decrypted_data
+
+
+zadanie_3(correct_data)
