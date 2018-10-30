@@ -22,16 +22,99 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 import hashlib
+from gmpy2 import mpz, add, sub, mul, invert
 
 
 def main():
     data = read_file()
-
+    x = int(input("Wpisz małe p (pierwsza liczba 2^p) [p<63]: "))
+    y = int(input("Wpisz małe p (druga liczba 3^p) [p<40]: "))
+    aa = int(input("Wpisz duże p (pierwsza liczba 2^p) [p>=63]: "))
+    bb = int(input("Wpisz duże p (druga liczba 3^p) [p>=40]: "))
+    zadanie_1(x,y)
+    zadanie_2(aa,bb)
     zadanie_3(data)
     zadanie_4(data)
 
+def zadanie_1(x,y):
+    print("\n**************************************")
+    print(">>> Zadanie 1 <<<:")
+    a = 2**x
+    b = 3**y
+    print(f"Mała liczba a (2^{x})={a}")
+    print(f"Mała liczba b (3^{y})={b}")
+
+    print("\n> Python handling <:\n")   
+    s = a+b
+    d = a-b
+    m = a*b
+    mod = modinv(a,b)
+
+    print("a+b =",s)
+    print("a-b =",d)
+    print("a*b =",m)
+    print("a*y==1(mod b):",mod)
+
+    print("\n>>> Large numbers with gmpy2 <<<:\n")
+    am = mpz(a)
+    bm = mpz(b)
+
+    sm = add(am,bm)
+    dm = sub(am,bm)
+    mm = mul(am,bm)
+    modm = invert(am,bm)
+    print("large numbers a+b:", sm)
+    print("large numbers a-b:", dm)
+    print("large numbers a*b:", mm)
+    print("large numbers a*y==1(mod b):", modm)
+
+    print("\n\nCheck matches:")
+    print("Add: ",s==sm)
+    print("Divide: ",d==dm)
+    print("Multiply: ",m==mm)
+    print("Modular inverse: ",mod==modm)
+
+def zadanie_2(x,y):
+    print("\n**************************************")
+    print(">>> Zadanie 2 <<<:")
+    a = 2**x
+    b = 3**y
+    print(f"Duża liczba a (2^{x})={a}")
+    print(f"Duża liczba b (3^{y})={b}")
+
+    print("\n>>> Python handling <<<:\n")
+    s = a+b
+    d = a-b
+    m = a*b
+    mod = modinv(a,b)
+
+    print("a+b =",s)
+    print("a-b =",d)
+    print("a*b =",m)
+    print("a*y==1(mod b):",mod)
+
+    print("\n>>> Large numbers with gmpy2 <<<:\n")
+    am = mpz(a)
+    bm = mpz(b)
+
+    sm = add(am,bm)
+    dm = sub(am,bm)
+    mm = mul(am,bm)
+    modm = invert(am,bm)
+    print("large numbers a+b:", sm)
+    print("large numbers a-b:", dm)
+    print("large numbers a*b:", mm)
+    print("large numbers a*y==1(mod b):", modm)
+
+    print("\n\nCheck matches:")
+    print("Add: ",s==sm)
+    print("Divide: ",d==dm)
+    print("Multiply: ",m==mm)
+    print("Modular inverse: ",mod==modm)
+
 
 def zadanie_3(correct_data):
+    print("\n**************************************")
     print(">>> Zadanie 3 <<<:\n")
     print("Klucze i pliki poprawne:\n")
 
@@ -71,6 +154,7 @@ def zadanie_3(correct_data):
 
 
 def zadanie_4(data):
+    print("\n**************************************")
     print("\n>>> Zadanie 4 <<<:")
 
     hash = generate_hash(data)
@@ -133,6 +217,17 @@ def read_file():
     file.close()
     return data
 
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    g, y, x = egcd(b%a,a)
+    return (g, x - (b//a) * y, y)
+
+def modinv(a, m):
+    g, x, y = egcd(a, m)
+    if g != 1:
+        raise Exception('No modular inverse')
+    return x%m
 
 if __name__ == "__main__":
     main()
